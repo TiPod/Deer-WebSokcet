@@ -5,26 +5,36 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Deer.WebSockets
 {
     public abstract class DeerWebSocket
     {
-        public string Id { get; private set; }
+        public string Id { get; protected set; }
+
+        public HttpContext Context { get; private set; }
 
         protected WebSocket webSocket;
 
         protected TaskCompletionSource<object> tcs;
 
-        internal async Task ProcessRequestAsync(IDeerWebSocketConnetionInternalManager connetionInternalManager, WebSocket socket, DeerWebSocketOptions options, CancellationToken cancellationToken = default)
+
+
+        internal async Task ProcessRequestAsync(HttpContext context, DeerWebSocketOptions options, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             tcs = new TaskCompletionSource<object>();
-            webSocket = socket;
-            Id = Guid.NewGuid().ToString("N");
-            await connetionInternalManager.AddAsync(this);
+            Context = context;
 
-            await OnConnectedAsync(cancellationToken);
+            var connetionInternalManager = context.RequestServices.GetRequiredService<IDeerWebSocketConnetionInternalManager>();
+            webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
+            Id = Guid.NewGuid().ToString("N");
+            await OnConnectedAsync(context, cancellationToken);
+            await connetionInternalManager.AddAsync(this);
             try
             {
                 var revBuffers = new List<byte>();
@@ -58,7 +68,7 @@ namespace Deer.WebSockets
             await tcs.Task;
         }
 
-        public virtual Task OnConnectedAsync(CancellationToken cancellationToken)
+        public virtual Task OnConnectedAsync(HttpContext Context, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return Task.CompletedTask;

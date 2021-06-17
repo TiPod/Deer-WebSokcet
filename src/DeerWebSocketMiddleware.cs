@@ -51,10 +51,7 @@ namespace Deer.WebSockets
                     var webSocket = context.RequestServices.GetRequiredService<DeerWebSocket>();
 
 
-
-                    var connetionInternalManager = context.RequestServices.GetRequiredService<IDeerWebSocketConnetionInternalManager>();
-                    var socket = await context.WebSockets.AcceptWebSocketAsync();
-                    await webSocket.ProcessRequestAsync(connetionInternalManager, socket, _options);
+                    await webSocket.ProcessRequestAsync(context, _options);
                     return;
                 }
             }
