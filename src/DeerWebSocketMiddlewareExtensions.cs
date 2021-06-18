@@ -15,7 +15,6 @@ namespace Deer.WebSockets
             {
                 throw new ArgumentNullException("app");
             }
-
             app.UseWebSockets();
             return app.UseMiddleware<DeerWebSocketMiddleware>(Array.Empty<object>());
         }

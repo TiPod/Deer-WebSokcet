@@ -20,10 +20,7 @@ namespace WebsocketServerDemo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDeerWebSockets<TestDeerWebsocket>((options) =>
-            {
-                options.ReceiveBufferSize = 4000;
-            });
+            services.AddDeerWebSockets<TestDeerWebsocket>();
             //services.AddDeerWebSockets<TestDeerWebsocket>();
             services.AddControllers();
         }

@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.WebSockets;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Deer.WebSockets
@@ -13,6 +14,10 @@ namespace Deer.WebSockets
             services.AddScoped<DeerWebSocket, TDeerWebsocket>();
             services.AddSingleton<IDeerWebSocketConnetionInternalManager, DeerWebSocketConnectionManager<TDeerWebsocket>>();
             services.AddSingleton<IDeerWebSocketConnectionManager<TDeerWebsocket>, DeerWebSocketConnectionManager<TDeerWebsocket>>(seviceProvider => (DeerWebSocketConnectionManager<TDeerWebsocket>)seviceProvider.GetService(typeof(IDeerWebSocketConnetionInternalManager)));
+
+            var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+            services.AddOptions();
+            services.Configure<DeerWebSocketOptions>(configuration.GetSection(nameof(DeerWebSocketOptions)));
 
             return services;
         }

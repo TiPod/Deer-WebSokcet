@@ -27,7 +27,7 @@ namespace WebsocketServerDemo.Controllers
         public async Task<string> Get()
         {
 
-            var connections = await _connectionManager.GetAll();
+            var connections = await _connectionManager.GetAllAsync();
 
 
             return $"当前连接数：{connections.Count()}";

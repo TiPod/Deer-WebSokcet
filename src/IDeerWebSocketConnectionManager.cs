@@ -9,9 +9,9 @@ namespace Deer.WebSockets
     {
         Task<TDeerWebsocket> GetAsync(string id);
 
-        Task<IEnumerable<TDeerWebsocket>> Get(Func<TDeerWebsocket, bool> predicate);
+        Task<IEnumerable<TDeerWebsocket>> GetAsync(Func<TDeerWebsocket, bool> predicate);
 
-        Task<IEnumerable<TDeerWebsocket>> GetAll();
+        Task<IEnumerable<TDeerWebsocket>> GetAllAsync();
 
     }
 }

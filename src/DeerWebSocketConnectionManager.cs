@@ -71,7 +71,7 @@ namespace Deer.WebSockets
             });
         }
 
-        public Task<IEnumerable<TDeerWebSocket>> Get(Func<TDeerWebSocket, bool> predicate)
+        public Task<IEnumerable<TDeerWebSocket>> GetAsync(Func<TDeerWebSocket, bool> predicate)
         {
             return SemaphoreLockAsync(connections =>
             {
@@ -79,7 +79,7 @@ namespace Deer.WebSockets
             });
         }
 
-        public Task<IEnumerable<TDeerWebSocket>> GetAll()
+        public Task<IEnumerable<TDeerWebSocket>> GetAllAsync()
         {
             return SemaphoreLockAsync(connections =>
             {
