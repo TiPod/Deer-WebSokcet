@@ -62,9 +62,10 @@ namespace Deer.WebSockets
             }
             finally
             {
+                await connetionInternalManager.RemoveAsync(this);
                 tcs.SetResult(default);
             }
-            await connetionInternalManager.RemoveAsync(this);
+
             await tcs.Task;
         }
 
@@ -83,7 +84,8 @@ namespace Deer.WebSockets
 
         public virtual async Task CloseAsync(WebSocketCloseStatus closeStatus, CancellationToken cancellationToken = default)
         {
-            await webSocket.CloseAsync(closeStatus, nameof(closeStatus), cancellationToken);
+            if (webSocket.State == WebSocketState.Open)
+                await webSocket.CloseAsync(closeStatus, nameof(closeStatus), cancellationToken);
             await OnCloseedAsync(closeStatus, cancellationToken);
         }
 

@@ -34,6 +34,7 @@ namespace Deer.WebSockets
                 throw new ArgumentNullException("options");
             }
             _next = next;
+            
             _options = options.Value;
             _requestPath = _options.Path;
             allAnyPath = _requestPath == PathString.FromUriComponent("/*");

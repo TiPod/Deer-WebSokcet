@@ -15,7 +15,7 @@ namespace WebsocketServerDemo
         public override async Task OnConnectedAsync(HttpContext Context, CancellationToken cancellationToken)
         {
 
-            await this.CloseAsync(WebSocketCloseStatus.NormalClosure);
+            //await this.CloseAsync(WebSocketCloseStatus.NormalClosure);
             await base.OnConnectedAsync(Context, cancellationToken);
         }
 

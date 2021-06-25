@@ -10,7 +10,9 @@
     <PackageProjectUrl>https://github.com/BigPete-King/Deer-WebSokcet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/BigPete-King/Deer-WebSokcet</RepositoryUrl>
-    <Version>1.0.0.1</Version>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0618</AssemblyVersion>
+    <FileVersion>1.0.1.0618</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
