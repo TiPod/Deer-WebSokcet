@@ -7,6 +7,11 @@ using Microsoft.Extensions.Options;
 
 namespace Deer.WebSockets
 {
+    public class DeerWebSocketOptions<TDeerWebSocket> : DeerWebSocketOptions where TDeerWebSocket : DeerWebSocket
+    {
+
+    }
+
     public class DeerWebSocketOptions : IOptions<DeerWebSocketOptions>
     {
 
@@ -18,5 +23,7 @@ namespace Deer.WebSockets
 
         public DeerWebSocketOptions Value => this;
     }
+
+
 
 }

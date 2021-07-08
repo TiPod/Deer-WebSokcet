@@ -29,7 +29,6 @@ namespace WebsocketServerDemo.Controllers
 
             var connections = await _connectionManager.GetAllAsync();
 
-
             return $"当前连接数：{connections.Count()}";
         }
     }

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace WebsocketServerDemo
 {
-    public class TestDeerWebsocket : DeerWebSocket
+    public class TestDeerWebsocket1 : DeerWebSocket
     {
         public override async Task OnConnectedAsync()
         {

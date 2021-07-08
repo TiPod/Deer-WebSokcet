@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace Deer.WebSockets
 {
-    public class DeerWebSocketConnectionManager<TDeerWebSocket> : IDeerWebSocketConnetionInternalManager, IDeerWebSocketConnectionManager<TDeerWebSocket> where TDeerWebSocket : DeerWebSocket
+    public class DeerWebSocketConnectionManager<TDeerWebSocket> : IDeerWebSocketConnetionInternalManager<TDeerWebSocket>, IDeerWebSocketConnectionManager<TDeerWebSocket> where TDeerWebSocket : DeerWebSocket
     {
-        private ConcurrentDictionary<string, DeerWebSocket> _connections = new ConcurrentDictionary<string, DeerWebSocket>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, TDeerWebSocket> _connections = new ConcurrentDictionary<string, TDeerWebSocket>(StringComparer.OrdinalIgnoreCase);
 
         private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
-        private Task<TResult> SemaphoreLockAsync<TResult>(Func<ConcurrentDictionary<string, DeerWebSocket>, Task<TResult>> func)
+        private Task<TResult> SemaphoreLockAsync<TResult>(Func<ConcurrentDictionary<string, TDeerWebSocket>, Task<TResult>> func)
         {
             semaphore.Wait();
             try
@@ -28,7 +28,7 @@ namespace Deer.WebSockets
             }
         }
 
-        private Task SemaphoreLockAsync(Func<ConcurrentDictionary<string, DeerWebSocket>, Task> func)
+        private Task SemaphoreLockAsync(Func<ConcurrentDictionary<string, TDeerWebSocket>, Task> func)
         {
             semaphore.Wait();
             try
@@ -43,17 +43,18 @@ namespace Deer.WebSockets
 
 
 
-        public Task AddAsync(DeerWebSocket webSocket)
+        public Task AddAsync(TDeerWebSocket webSocket)
         {
 
             return SemaphoreLockAsync(connections =>
             {
                 connections[webSocket.Id] = webSocket;
                 return Task.CompletedTask;
+
             });
         }
 
-        public Task RemoveAsync(DeerWebSocket webSocket)
+        public Task RemoveAsync(TDeerWebSocket webSocket)
         {
             return SemaphoreLockAsync(connections =>
             {
@@ -65,7 +66,7 @@ namespace Deer.WebSockets
         {
             return SemaphoreLockAsync(connections =>
             {
-                connections.TryGetValue(id, out DeerWebSocket websocket);
+                connections.TryGetValue(id, out TDeerWebSocket websocket);
 
                 return Task.FromResult(websocket as TDeerWebSocket);
             });
@@ -75,7 +76,7 @@ namespace Deer.WebSockets
         {
             return SemaphoreLockAsync(connections =>
             {
-                return Task.FromResult(connections.Select(p => p.Value as TDeerWebSocket).Where(predicate));
+                return Task.FromResult(connections.Select(p => p.Value).Where(predicate));
             });
         }
 
@@ -83,7 +84,7 @@ namespace Deer.WebSockets
         {
             return SemaphoreLockAsync(connections =>
             {
-                return Task.FromResult(connections.Select(p => p.Value as TDeerWebSocket));
+                return Task.FromResult(connections.Select(p => p.Value));
             });
         }
 

@@ -11,20 +11,26 @@ namespace Deer.WebSockets
     {
         public static IServiceCollection AddDeerWebSockets<TDeerWebsocket>(this IServiceCollection services) where TDeerWebsocket : DeerWebSocket
         {
-            services.AddScoped<DeerWebSocket, TDeerWebsocket>();
-            services.AddSingleton<IDeerWebSocketConnetionInternalManager, DeerWebSocketConnectionManager<TDeerWebsocket>>();
-            services.AddSingleton<IDeerWebSocketConnectionManager<TDeerWebsocket>, DeerWebSocketConnectionManager<TDeerWebsocket>>(seviceProvider => (DeerWebSocketConnectionManager<TDeerWebsocket>)seviceProvider.GetService(typeof(IDeerWebSocketConnetionInternalManager)));
 
-            var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-            services.AddOptions();
-            services.Configure<DeerWebSocketOptions>(configuration.GetSection(nameof(DeerWebSocketOptions)));
-            return services;
+            return AddDeerWebSockets<TDeerWebsocket>(services, null);
         }
 
-        public static IServiceCollection AddDeerWebSockets<TDeerWebsocket>(this IServiceCollection services, Action<DeerWebSocketOptions> configure) where TDeerWebsocket : DeerWebSocket
+        public static IServiceCollection AddDeerWebSockets<TDeerWebsocket>(this IServiceCollection services, Action<DeerWebSocketOptions<TDeerWebsocket>> configure) where TDeerWebsocket : DeerWebSocket
         {
-            services.Configure(configure);
-            return AddDeerWebSockets<TDeerWebsocket>(services);
+
+            services.AddScoped<DeerWebSocket, TDeerWebsocket>();
+            services.AddScoped<TDeerWebsocket>();
+            services.AddSingleton<IDeerWebSocketConnetionInternalManager<TDeerWebsocket>, DeerWebSocketConnectionManager<TDeerWebsocket>>();
+            services.AddSingleton<IDeerWebSocketConnectionManager<TDeerWebsocket>, DeerWebSocketConnectionManager<TDeerWebsocket>>(seviceProvider => (DeerWebSocketConnectionManager<TDeerWebsocket>)seviceProvider.GetService(typeof(IDeerWebSocketConnetionInternalManager<TDeerWebsocket>)));
+            services.AddOptions();
+            var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+            services.Configure<DeerWebSocketOptions<TDeerWebsocket>>(configuration.GetSection(nameof(DeerWebSocketOptions)));
+            if (configure != null)
+            {
+                services.Configure(configure);
+            }
+            return services;
+
         }
     }
 }

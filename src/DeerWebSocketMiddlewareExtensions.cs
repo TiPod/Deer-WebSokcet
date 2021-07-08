@@ -8,7 +8,7 @@ namespace Deer.WebSockets
 {
     public static class DeerWebSocketMiddlewareExtensions
     {
-        public static IApplicationBuilder UseDeerWebSockets(this IApplicationBuilder app)
+        public static IApplicationBuilder UseDeerWebSockets<TDeerWebSocket>(this IApplicationBuilder app) where TDeerWebSocket:DeerWebSocket
         {
 
             if (app == null)
@@ -16,10 +16,10 @@ namespace Deer.WebSockets
                 throw new ArgumentNullException("app");
             }
             app.UseWebSockets();
-            return app.UseMiddleware<DeerWebSocketMiddleware>(Array.Empty<object>());
+            return app.UseMiddleware<DeerWebSocketMiddleware<TDeerWebSocket>>(Array.Empty<object>());
         }
 
-        public static IApplicationBuilder UseDeerWebSockets(this IApplicationBuilder app, DeerWebSocketOptions options)
+        public static IApplicationBuilder UseDeerWebSockets<TDeerWebSocket>(this IApplicationBuilder app, DeerWebSocketOptions options) where TDeerWebSocket : DeerWebSocket
         {
             if (app == null)
             {
@@ -31,7 +31,7 @@ namespace Deer.WebSockets
                 throw new ArgumentNullException("options");
             }
             app.UseWebSockets();
-            return app.UseMiddleware<DeerWebSocketMiddleware>(new object[1] {
+            return app.UseMiddleware<DeerWebSocketMiddleware<TDeerWebSocket>>(new object[1] {
                 Options.Create(options)
             });
         }

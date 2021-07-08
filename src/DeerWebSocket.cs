@@ -12,44 +12,24 @@ namespace Deer.WebSockets
 {
     public abstract class DeerWebSocket
     {
-        public string Id { get; protected set; }
-
-        public HttpContext Context { get; private set; }
-
+        public string Id { get; private set; }
 
         private int _receiveBufferSize;
-
         private int _sendBufferSize;
-
         protected WebSocket webSocket;
-
         private CancellationTokenSource _cancellationTokenSource;
-
-
         private WebSocketCloseStatus _webSocketCloseStatus = WebSocketCloseStatus.Empty;
+        public WebSocketState State => webSocket.State;
 
-        internal void Initialize(DeerWebSocketOptions options)
+        internal async Task HandleAceeptWebSocketAsync(WebSocket socket, DeerWebSocketOptions options, CancellationToken cancellationToken = default)
         {
             _receiveBufferSize = options?.ReceiveBufferSize ?? 4 * 1024;
             _sendBufferSize = options?.SendBufferSize ?? 4 * 1024;
-        }
-        internal async Task HandleAceeptWebSocketAsync(HttpContext context, CancellationToken cancellationToken = default)
-        {
-
             _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             Id = Guid.NewGuid().ToString("N");
-            Context = context;
-            webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            webSocket = socket;
             await OnConnectedAsync();
         }
-
-
-
-
-
-
-
-
         internal async Task ProcessRequestAsync()
         {
 
@@ -99,7 +79,15 @@ namespace Deer.WebSockets
         public virtual async Task SendAsync(string message, CancellationToken cancellationToken = default)
         {
             var cts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token, cancellationToken);
-            await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(message)), WebSocketMessageType.Text, true, cts.Token);
+
+            var array = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
+            var offset = 0;
+            while (array.Count > offset + _sendBufferSize)
+            {
+                await webSocket.SendAsync(array.Slice(offset, _sendBufferSize), WebSocketMessageType.Text, false, cts.Token);
+                offset += _sendBufferSize;
+            }
+            await webSocket.SendAsync(array.Slice(offset), WebSocketMessageType.Text, true, cts.Token);
         }
 
         public virtual Task CloseAsync(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.Empty)

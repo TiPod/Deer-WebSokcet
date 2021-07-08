@@ -14,15 +14,14 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Deer.WebSockets
 {
-    public class DeerWebSocketMiddleware
+    public class DeerWebSocketMiddleware<TDeerWebSocket> where TDeerWebSocket : DeerWebSocket
     {
         private readonly RequestDelegate _next;
         private readonly DeerWebSocketOptions _options;
-
         private readonly PathString _requestPath;
         private readonly bool allAnyPath = false;
 
-        public DeerWebSocketMiddleware(RequestDelegate next, IOptions<DeerWebSocketOptions> options)
+        public DeerWebSocketMiddleware(RequestDelegate next, IOptions<DeerWebSocketOptions<TDeerWebSocket>> options)
 
         {
             if (next == null)
@@ -49,10 +48,11 @@ namespace Deer.WebSockets
             {
                 if (context.WebSockets.IsWebSocketRequest)
                 {
-                    var connetionInternalManager = context.RequestServices.GetRequiredService<IDeerWebSocketConnetionInternalManager>();
-                    var webSocket = context.RequestServices.GetRequiredService<DeerWebSocket>();
-                    webSocket.Initialize(_options);
-                    await webSocket.HandleAceeptWebSocketAsync(context);
+                    var serviceProvider = context.RequestServices;
+                    var connetionInternalManager = serviceProvider.GetRequiredService<IDeerWebSocketConnetionInternalManager<TDeerWebSocket>>();
+                    var webSocket = serviceProvider.GetRequiredService<TDeerWebSocket>();
+                    var socket = await context.WebSockets.AcceptWebSocketAsync();
+                    await webSocket.HandleAceeptWebSocketAsync(socket, _options);
                     await connetionInternalManager.AddAsync(webSocket);
                     try
                     {

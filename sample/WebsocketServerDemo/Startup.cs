@@ -20,7 +20,8 @@ namespace WebsocketServerDemo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDeerWebSockets<TestDeerWebsocket>();
+            services.AddDeerWebSockets<TestDeerWebsocket>(options=> options.Path="/test");
+            services.AddDeerWebSockets<TestDeerWebsocket1>(options => options.Path = "/test1");
             services.AddControllers();
         }
 
@@ -31,13 +32,10 @@ namespace WebsocketServerDemo
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseRouting();
-
             app.UseAuthorization();
-
-            app.UseDeerWebSockets();
-
+            app.UseDeerWebSockets<TestDeerWebsocket>();
+            app.UseDeerWebSockets<TestDeerWebsocket1>();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

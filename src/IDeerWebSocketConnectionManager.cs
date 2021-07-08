@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Deer.WebSockets
 {
-    public interface IDeerWebSocketConnectionManager<TDeerWebsocket>
+    public interface IDeerWebSocketConnectionManager<TDeerWebsocket> where TDeerWebsocket : DeerWebSocket
     {
         Task<TDeerWebsocket> GetAsync(string id);
 

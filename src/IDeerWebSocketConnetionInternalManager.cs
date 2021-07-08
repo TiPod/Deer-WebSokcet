@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace Deer.WebSockets
 {
-    internal interface IDeerWebSocketConnetionInternalManager
+    internal interface IDeerWebSocketConnetionInternalManager<TDeerWebsocket> where TDeerWebsocket : DeerWebSocket
     {
 
-        Task AddAsync(DeerWebSocket webSocket);
+        Task AddAsync(TDeerWebsocket webSocket);
 
-        Task RemoveAsync(DeerWebSocket webSocket);
+        Task RemoveAsync(TDeerWebsocket webSocket);
 
 
     }
