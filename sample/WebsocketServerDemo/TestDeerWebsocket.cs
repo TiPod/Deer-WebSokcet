@@ -12,11 +12,11 @@ namespace WebsocketServerDemo
 {
     public class TestDeerWebsocket : DeerWebSocket
     {
-        public override async Task OnConnectedAsync(HttpContext Context, CancellationToken cancellationToken)
+        public override async Task OnConnectedAsync()
         {
 
-            //await this.CloseAsync(WebSocketCloseStatus.NormalClosure);
-            await base.OnConnectedAsync(Context, cancellationToken);
+            await this.CloseAsync(WebSocketCloseStatus.NormalClosure);
+            await base.OnConnectedAsync();
         }
 
         public string Name { get; private set; }
@@ -27,7 +27,7 @@ namespace WebsocketServerDemo
 
 
             Console.WriteLine(message);
-            await SendAsync(message);
+            await SendAsync(message, cancellationToken);
         }
 
     }

@@ -21,7 +21,6 @@ namespace WebsocketServerDemo
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDeerWebSockets<TestDeerWebsocket>();
-            //services.AddDeerWebSockets<TestDeerWebsocket>();
             services.AddControllers();
         }
 

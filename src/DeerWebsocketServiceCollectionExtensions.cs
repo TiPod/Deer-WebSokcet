@@ -18,13 +18,11 @@ namespace Deer.WebSockets
             var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
             services.AddOptions();
             services.Configure<DeerWebSocketOptions>(configuration.GetSection(nameof(DeerWebSocketOptions)));
-
             return services;
         }
 
         public static IServiceCollection AddDeerWebSockets<TDeerWebsocket>(this IServiceCollection services, Action<DeerWebSocketOptions> configure) where TDeerWebsocket : DeerWebSocket
         {
-
             services.Configure(configure);
             return AddDeerWebSockets<TDeerWebsocket>(services);
         }

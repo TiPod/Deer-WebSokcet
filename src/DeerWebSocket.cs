@@ -16,62 +16,81 @@ namespace Deer.WebSockets
 
         public HttpContext Context { get; private set; }
 
+
+        private int _receiveBufferSize;
+
+        private int _sendBufferSize;
+
         protected WebSocket webSocket;
 
-        protected TaskCompletionSource<object> tcs;
+        private CancellationTokenSource _cancellationTokenSource;
 
 
+        private WebSocketCloseStatus _webSocketCloseStatus = WebSocketCloseStatus.Empty;
 
-        internal async Task ProcessRequestAsync(HttpContext context, DeerWebSocketOptions options, CancellationToken cancellationToken = default)
+        internal void Initialize(DeerWebSocketOptions options)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            _receiveBufferSize = options?.ReceiveBufferSize ?? 4 * 1024;
+            _sendBufferSize = options?.SendBufferSize ?? 4 * 1024;
+        }
+        internal async Task HandleAceeptWebSocketAsync(HttpContext context, CancellationToken cancellationToken = default)
+        {
 
-            tcs = new TaskCompletionSource<object>();
-            Context = context;
-
-            var connetionInternalManager = context.RequestServices.GetRequiredService<IDeerWebSocketConnetionInternalManager>();
-            webSocket = await context.WebSockets.AcceptWebSocketAsync();
-
+            _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             Id = Guid.NewGuid().ToString("N");
-            await OnConnectedAsync(context, cancellationToken);
-            await connetionInternalManager.AddAsync(this);
+            Context = context;
+            webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            await OnConnectedAsync();
+        }
+
+
+
+
+
+
+
+
+        internal async Task ProcessRequestAsync()
+        {
+
+            var revBuffers = new List<byte>();
+            var buffer = new byte[_receiveBufferSize];
             try
             {
-                var revBuffers = new List<byte>();
-                var buffer = new byte[options.ReceiveBufferSize];
-                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationTokenSource.Token);
                 while (!result.CloseStatus.HasValue)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
                     //追加获取的字节
                     revBuffers.AddRange(new ArraySegment<byte>(buffer, 0, result.Count));
                     if (result.EndOfMessage)
                     {
                         var revMsg = Encoding.UTF8.GetString(revBuffers.ToArray());
-                        await ReceiveAsync(revMsg, cancellationToken);
+                        await ReceiveAsync(revMsg, _cancellationTokenSource.Token);
                         revBuffers.Clear();
                     }
 
-                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationTokenSource.Token);
                 }
-                await CloseAsync(result.CloseStatus.Value, cancellationToken);
+                _webSocketCloseStatus = result.CloseStatus.Value;
             }
-            catch (Exception)
+            catch (OperationCanceledException) //操作被取消
             {
-                await CloseAsync(WebSocketCloseStatus.InternalServerError, cancellationToken);
+                _webSocketCloseStatus = WebSocketCloseStatus.NormalClosure;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                _webSocketCloseStatus = WebSocketCloseStatus.InternalServerError;
             }
             finally
             {
-                await connetionInternalManager.RemoveAsync(this);
-                tcs.SetResult(default);
+                await webSocket.CloseAsync(_webSocketCloseStatus, _webSocketCloseStatus.ToString(), _cancellationTokenSource.Token);
+                await OnCloseedAsync(_webSocketCloseStatus);
             }
-
-            await tcs.Task;
         }
 
-        public virtual Task OnConnectedAsync(HttpContext Context, CancellationToken cancellationToken)
+        public virtual Task OnConnectedAsync()
         {
-            cancellationToken.ThrowIfCancellationRequested();
             return Task.CompletedTask;
         }
 
@@ -79,20 +98,22 @@ namespace Deer.WebSockets
 
         public virtual async Task SendAsync(string message, CancellationToken cancellationToken = default)
         {
-            await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(message)), WebSocketMessageType.Text, true, cancellationToken);
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token, cancellationToken);
+            await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(message)), WebSocketMessageType.Text, true, cts.Token);
         }
 
-        public virtual async Task CloseAsync(WebSocketCloseStatus closeStatus, CancellationToken cancellationToken = default)
+        public virtual Task CloseAsync(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.Empty)
         {
-            if (webSocket.State == WebSocketState.Open)
-                await webSocket.CloseAsync(closeStatus, nameof(closeStatus), cancellationToken);
-            await OnCloseedAsync(closeStatus, cancellationToken);
-        }
-
-        public virtual Task OnCloseedAsync(WebSocketCloseStatus closeStatus, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+            _webSocketCloseStatus = closeStatus;
+            _cancellationTokenSource.Cancel();
             return Task.CompletedTask;
         }
+
+        public virtual Task OnCloseedAsync(WebSocketCloseStatus closeStatus)
+        {
+            return Task.CompletedTask;
+        }
+
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -34,7 +35,6 @@ namespace Deer.WebSockets
                 throw new ArgumentNullException("options");
             }
             _next = next;
-            
             _options = options.Value;
             _requestPath = _options.Path;
             allAnyPath = _requestPath == PathString.FromUriComponent("/*");
@@ -49,10 +49,19 @@ namespace Deer.WebSockets
             {
                 if (context.WebSockets.IsWebSocketRequest)
                 {
+                    var connetionInternalManager = context.RequestServices.GetRequiredService<IDeerWebSocketConnetionInternalManager>();
                     var webSocket = context.RequestServices.GetRequiredService<DeerWebSocket>();
-
-
-                    await webSocket.ProcessRequestAsync(context, _options);
+                    webSocket.Initialize(_options);
+                    await webSocket.HandleAceeptWebSocketAsync(context);
+                    await connetionInternalManager.AddAsync(webSocket);
+                    try
+                    {
+                        await webSocket.ProcessRequestAsync();
+                    }
+                    finally
+                    {
+                        await connetionInternalManager.RemoveAsync(webSocket);
+                    }
                     return;
                 }
             }
